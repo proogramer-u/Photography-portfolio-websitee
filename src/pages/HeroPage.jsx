@@ -6,7 +6,7 @@ export default function HeroPage() {
     <PageTransition>
       <div style={{ position: 'relative' }}>
         <img
-          src="./dist/images/DazzCam/ccdr 2026-05-30 0707025C5FB56DDBE6.JPG"
+          src="/images/DazzCam/ccdr 2026-05-30 0707025C5FB56DDBE6.JPG"
           alt="Hero"
           style={{ width: '100vw', height: '100vh', objectFit: 'cover', display: 'block' }}
         />
