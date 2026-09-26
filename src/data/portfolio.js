@@ -1,14 +1,3 @@
-const placeholderImage =
-  "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=800&q=80"
-
-const placeholderProjectImages = [
-  { id: 1, url: placeholderImage, caption: "Oxford Street, London 2018" },
-  { id: 2, url: placeholderImage, caption: "New York City, 2023" },
-  { id: 3, url: placeholderImage, caption: "New York City, 2023" },
-  { id: 4, url: placeholderImage, caption: "New York City, 2023" },
-  { id: 5, url: placeholderImage, caption: "New York City, 2023" },
-]
-
 export const projects = [
   {
     id: 1,
