@@ -15,6 +15,9 @@ export default function HorizontalGallery({ images }) {
                 <img 
                   src={img.url} 
                   alt={img.caption || `Gallery image ${index + 1}`} 
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
                   className="max-h-[60vh] w-auto object-contain"
                 />
                 {img.caption && (
