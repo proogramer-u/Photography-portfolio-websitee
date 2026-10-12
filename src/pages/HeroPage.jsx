@@ -8,6 +8,9 @@ export default function HeroPage() {
         <img
           src="/images/DazzCam/ccdr 2026-05-30 0707025C5FB56DDBE6.JPG"
           alt="Hero"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
           style={{ width: '100vw', height: '100vh', objectFit: 'cover', display: 'block' }}
         />
         <div

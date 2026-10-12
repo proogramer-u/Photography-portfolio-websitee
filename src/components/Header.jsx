@@ -1,9 +1,18 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { projects } from "../data/portfolio"
+import { listPublishedGalleries } from "../lib/galleryApi"
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [menuGalleries, setMenuGalleries] = useState(projects);
+    const [loadError, setLoadError] = useState(false);
+
+    useEffect(() => {
+        listPublishedGalleries().then((galleries) => {
+            if (galleries) setMenuGalleries(galleries)
+        }).catch(() => setLoadError(true))
+    }, [])
 
     return (
         <>
@@ -31,8 +40,9 @@ const Header = () => {
                         <Link to="/gallery" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-500 transition-colors underline decoration-1 underline-offset-4">
                             Gallery
                         </Link>
-                        {projects.map((project) => (
-                            <Link key={project.id} to={`/project-${project.id}`} onClick={() => setIsMenuOpen(false)} className="hover:text-gray-500 transition-colors">
+                        {loadError && <p role="status" className="text-sm font-normal text-gray-500">Live galleries are temporarily unavailable.</p>}
+                        {menuGalleries.map((project) => (
+                            <Link key={project.id} to={`/project/${project.slug || `project-${project.id}`}`} onClick={() => setIsMenuOpen(false)} className="hover:text-gray-500 transition-colors">
                                 {project.title}
                             </Link>
                         ))}
