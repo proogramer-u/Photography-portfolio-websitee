@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import PageTransition from '../components/PageTransition'
-import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { isAdminLoginConfigured, signInAdmin } from '../lib/adminAuth'
 
 export default function AdminLoginPage({ session }) {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -16,11 +16,13 @@ export default function AdminLoginPage({ session }) {
     event.preventDefault()
     setError('')
     setIsSubmitting(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-    setIsSubmitting(false)
-
-    if (signInError) setError(signInError.message)
-    else navigate('/admin')
+    try {
+      const { error: signInError } = await signInAdmin({ username, password })
+      if (signInError) setError(signInError.message)
+      else navigate('/admin')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -31,21 +33,21 @@ export default function AdminLoginPage({ session }) {
             <p className="text-sm text-gray-500 mb-2">Portfolio administration</p>
             <h1 className="text-4xl font-bold">Sign in</h1>
           </div>
-          {!isSupabaseConfigured && (
+          {!isAdminLoginConfigured && (
             <p className="border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-              Add the Supabase environment variables before using the admin page.
+              Admin login is not configured. Please check the site configuration.
             </p>
           )}
           <label className="block text-sm font-bold">
-            Email
-            <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full border border-gray-300 p-3 font-normal" />
+            Username
+            <input required type="text" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 w-full border border-gray-300 p-3 font-normal" />
           </label>
           <label className="block text-sm font-bold">
             Password
-            <input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full border border-gray-300 p-3 font-normal" />
+            <input required type="password" name="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full border border-gray-300 p-3 font-normal" />
           </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button disabled={!isSupabaseConfigured || isSubmitting} className="w-full bg-black px-4 py-3 text-white disabled:cursor-not-allowed disabled:opacity-40">
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          <button disabled={!isAdminLoginConfigured || isSubmitting} className="w-full bg-black px-4 py-3 text-white disabled:cursor-not-allowed disabled:opacity-40">
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>

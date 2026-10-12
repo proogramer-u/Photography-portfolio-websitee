@@ -1,67 +1,135 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import AdminGalleryForm from '../components/AdminGalleryForm'
+import AdminWorkspace from '../components/admin/AdminWorkspace'
+import AdminDialog from '../components/admin/AdminDialog'
+import AdminSidebar from '../components/admin/AdminSidebar'
+import AdminPhotoPreview from '../components/admin/AdminPhotoPreview'
+import AdminCoverEditor from '../components/admin/AdminCoverEditor'
 import { listAllGalleries } from '../lib/galleryApi'
+import { renameGallery, setGalleryStatus, setGalleryCover, deleteGalleryRecord } from '../lib/adminGalleryApi'
 import { supabase } from '../lib/supabase'
+import './admin.css'
 
 export default function AdminPage({ session }) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedId = searchParams.get('gallery')
   const [galleries, setGalleries] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-
-  async function loadGalleries() {
-    try {
-      setGalleries(await listAllGalleries())
-    } catch (loadError) {
-      setError(loadError.message)
-    }
-  }
+  const [notice, setNotice] = useState('')
+  const [dialog, setDialog] = useState(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [dialogError, setDialogError] = useState('')
 
   useEffect(() => {
     if (!session) return
-    let isCurrent = true
-    listAllGalleries()
-      .then((data) => {
-        if (isCurrent) setGalleries(data)
-      })
-      .catch((loadError) => {
-        if (isCurrent) setError(loadError.message)
-      })
-
-    return () => {
-      isCurrent = false
-    }
+    let current = true
+    listAllGalleries().then((data) => {
+      if (current) { setGalleries(data); setError('') }
+    }).catch(() => {
+      if (current) setError('Your galleries are temporarily unavailable. Please try again.')
+    }).finally(() => {
+      if (current) setLoading(false)
+    })
+    return () => { current = false }
   }, [session])
 
+  useEffect(() => {
+    const closeOnHistory = () => { if (!busy) setDialog(null) }
+    window.addEventListener('popstate', closeOnHistory)
+    return () => window.removeEventListener('popstate', closeOnHistory)
+  }, [busy])
+
+  async function refresh() {
+    setLoading(true)
+    setError('')
+    try { setGalleries(await listAllGalleries()) }
+    catch { setError('Your galleries are temporarily unavailable. Please try again.') }
+    finally { setLoading(false) }
+  }
+
+  function selectGallery(id) {
+    if (busy) return
+    setSearchParams(id ? { gallery: id } : {})
+    setDialog(null)
+    setDialogError('')
+    setNotice('')
+  }
+
+  function openDialog(next) { if (!busy) { setDialogError(''); setNotice(''); setDialog(next) } }
+  function closeDialog() { if (!busy) setDialog(null) }
+
+  async function runAction(action, message, close = false) {
+    setBusy(true)
+    setError('')
+    setNotice('')
+    setDialogError('')
+    try {
+      await action()
+      setNotice(message)
+      if (close) setDialog(null)
+      await refresh()
+    } catch {
+      const message = 'Could not save this change. Check your access and try again.'
+      if (dialog) setDialogError(message)
+      else setError(message)
+    } finally { setBusy(false) }
+  }
+
+  function handleDelete(gallery) {
+    if (!window.confirm(`Delete “${gallery.title}” and its photo records? This cannot be undone. Uploaded files will remain in Storage.`)) return
+    runAction(async () => {
+      await deleteGalleryRecord(gallery.id)
+      if (selectedId === gallery.id) setSearchParams({})
+    }, 'Gallery deleted.')
+  }
+
+  function handleStatus(gallery) {
+    if (gallery.status !== 'published' && (!gallery.images.length || !gallery.cover)) {
+      setError('Add photographs and choose a cover before publishing this gallery.')
+      return
+    }
+    runAction(() => setGalleryStatus(gallery.id, gallery.status === 'published' ? 'draft' : 'published'), gallery.status === 'published' ? 'Gallery unpublished.' : 'Gallery published.')
+  }
+
+  async function signOut() {
+    setBusy(true)
+    const reportError = () => {
+      if (dialog) setDialogError('Could not sign out. Please try again.')
+      else setError('Could not sign out. Please try again.')
+    }
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) reportError()
+    } catch { reportError() }
+    finally { setBusy(false) }
+  }
+
   if (!session) return <Navigate to="/admin/login" replace />
-
-  async function updateStatus(gallery) {
-    const nextStatus = gallery.status === 'published' ? 'draft' : 'published'
-    const { error: updateError } = await supabase.from('galleries').update({ status: nextStatus }).eq('id', gallery.id)
-    if (updateError) setError(updateError.message)
-    else loadGalleries()
-  }
-
-  async function deleteGallery(gallery) {
-    if (!window.confirm(`Delete ${gallery.title}?`)) return
-    const { error: deleteError } = await supabase.from('galleries').delete().eq('id', gallery.id)
-    if (deleteError) setError(deleteError.message)
-    else loadGalleries()
-  }
+  const selected = galleries.find((gallery) => gallery.id === selectedId)
+  const selectedPhoto = selected?.images.find((photo) => photo.id === dialog?.photoId)
+  const onCreate = () => openDialog({ type: 'create' })
+  const onRename = (gallery) => { setRenameValue(gallery.title); openDialog({ type: 'rename', gallery }) }
+  const onEditCover = (gallery) => openDialog({ type: 'cover', gallery })
 
   return (
     <PageTransition>
-      <main className="min-h-screen bg-white px-6 py-8 md:px-12">
-        <header className="mb-10 flex items-center justify-between gap-4">
-          <div><p className="text-sm text-gray-500">Portfolio administration</p><h1 className="text-4xl font-bold">Galleries</h1></div>
-          <button onClick={() => supabase.auth.signOut()} className="border border-gray-300 px-4 py-2">Sign out</button>
-        </header>
-        <div className="mx-auto max-w-5xl space-y-10">
-          <AdminGalleryForm onSaved={loadGalleries} />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <section className="space-y-3"><h2 className="text-2xl font-bold">Existing galleries</h2>{galleries.map((gallery) => <article key={gallery.id} className="flex flex-wrap items-center gap-4 border-b border-gray-200 py-4"><div className="flex-1"><h3 className="font-bold">{gallery.title}</h3><p className="text-sm text-gray-500">/{gallery.slug} · {gallery.images.length} photos · {gallery.status}</p></div><button onClick={() => updateStatus(gallery)} className="border border-gray-300 px-3 py-2">{gallery.status === 'published' ? 'Unpublish' : 'Publish'}</button><button onClick={() => deleteGallery(gallery)} className="border border-red-300 px-3 py-2 text-red-700">Delete</button></article>)}</section>
-        </div>
-      </main>
+      <AdminWorkspace galleries={galleries} selectedId={selectedId} loading={loading} error={error} notice={notice} busy={busy} onSelect={selectGallery} onCreate={onCreate} onSignOut={signOut} onMenu={() => openDialog({ type: 'navigation' })} onRename={onRename} onEditCover={onEditCover} onStatus={handleStatus} onDelete={handleDelete} onPhoto={(photo) => openDialog({ type: 'photo', photoId: photo.id })} onUpload={() => openDialog({ type: 'upload' })} onRetry={refresh} />
+      <AnimatePresence mode="wait">
+      {dialog && (dialog.type !== 'photo' || selectedPhoto) && <AdminDialog key={`${dialog.type}-${dialog.gallery?.id || dialog.photoId || ''}`} title={{ create: 'Create Gallery', rename: 'Rename Gallery', navigation: 'My Galleries', upload: 'Upload Photos', photo: 'Photograph', cover: 'Edit Gallery Cover' }[dialog.type]} onClose={closeDialog} dismissible={!busy} wide={dialog.type === 'photo'}>
+        {dialogError && <p className="admin-feedback admin-feedback-error" role="alert">{dialogError}</p>}
+        {dialog.type === 'create' && <AdminGalleryForm onSavingChange={setBusy} onCancel={closeDialog} onSaved={async () => { setDialog(null); setNotice('Gallery created.'); await refresh() }} />}
+        {dialog.type === 'cover' && <AdminCoverEditor gallery={dialog.gallery} onSavingChange={setBusy} onCancel={closeDialog} onSaved={async () => { setDialog(null); setNotice('Gallery cover updated.'); await refresh() }} />}
+        {dialog.type === 'rename' && <form className="admin-simple-form" onSubmit={(event) => { event.preventDefault(); runAction(() => renameGallery(dialog.gallery.id, renameValue), 'Gallery renamed. Its URL is unchanged.', true) }}><label>Gallery name<input autoFocus required value={renameValue} onChange={(event) => setRenameValue(event.target.value)} /></label><p>The existing gallery URL will stay the same.</p><button className="admin-button-primary" disabled={busy || !renameValue.trim()}>{busy ? 'Saving…' : 'Save Changes'}</button></form>}
+        {dialog.type === 'navigation' && <AdminSidebar galleries={galleries} selectedId={selectedId} onSelect={selectGallery} onCreate={onCreate} onSignOut={signOut} busy={busy} />}
+        {dialog.type === 'upload' && <div className="admin-dependency-panel"><p>Uploading into an existing gallery is not connected yet.</p><p>The existing upload flow still works when creating a new gallery. This view needs an upload operation that appends photo records, preserves ordering, and safely cleans up failed uploads.</p><button className="admin-button-secondary" onClick={closeDialog}>Back to gallery</button></div>}
+        {dialog.type === 'photo' && selectedPhoto && <AdminPhotoPreview photo={selectedPhoto} gallery={selected} busy={busy} onCover={() => runAction(() => setGalleryCover(selected, selectedPhoto.id), 'Gallery cover updated.', true)} />}
+      </AdminDialog>}
+      </AnimatePresence>
     </PageTransition>
   )
 }

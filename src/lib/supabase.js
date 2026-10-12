@@ -1,10 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+let client = null
+let configurationError = null
 
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+if (!supabaseUrl || !supabaseAnonKey) {
+  configurationError = 'Gallery service configuration is missing.'
+} else {
+  try {
+    const url = new URL(supabaseUrl)
+    if (!['https:', 'http:'].includes(url.protocol) || url.pathname.replace(/\/$/, '') || url.search || url.hash || url.username || url.password) {
+      configurationError = 'Gallery service configuration requires a valid project base URL.'
+    } else {
+      client = createClient(supabaseUrl, supabaseAnonKey)
+    }
+  } catch {
+    configurationError = 'Gallery service configuration is invalid.'
+  }
+}
+
+export const supabase = client
+export const isSupabaseConfigured = Boolean(client)
+export const supabaseConfigurationError = configurationError

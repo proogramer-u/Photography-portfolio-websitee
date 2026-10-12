@@ -6,11 +6,12 @@ import { listPublishedGalleries } from "../lib/galleryApi"
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [menuGalleries, setMenuGalleries] = useState(projects);
+    const [loadError, setLoadError] = useState(false);
 
     useEffect(() => {
         listPublishedGalleries().then((galleries) => {
             if (galleries) setMenuGalleries(galleries)
-        }).catch(() => {})
+        }).catch(() => setLoadError(true))
     }, [])
 
     return (
@@ -39,6 +40,7 @@ const Header = () => {
                         <Link to="/gallery" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-500 transition-colors underline decoration-1 underline-offset-4">
                             Gallery
                         </Link>
+                        {loadError && <p role="status" className="text-sm font-normal text-gray-500">Live galleries are temporarily unavailable.</p>}
                         {menuGalleries.map((project) => (
                             <Link key={project.id} to={`/project/${project.slug || `project-${project.id}`}`} onClick={() => setIsMenuOpen(false)} className="hover:text-gray-500 transition-colors">
                                 {project.title}

@@ -11,6 +11,8 @@ export default function ProjectPage({ projectId }) {
   const fallbackProject = fallbackGalleries.find((item) => item.slug === requestedSlug) || projects.find((item) => String(item.id) === projectId)
   const [project, setProject] = useState(fallbackProject)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [requestVersion, setRequestVersion] = useState(0)
 
   useEffect(() => {
     let isCurrent = true
@@ -18,7 +20,9 @@ export default function ProjectPage({ projectId }) {
       .then((data) => {
         if (isCurrent && data) setProject(data)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (isCurrent) setLoadError(true)
+      })
       .finally(() => {
         if (isCurrent) setIsLoading(false)
       })
@@ -26,12 +30,19 @@ export default function ProjectPage({ projectId }) {
     return () => {
       isCurrent = false
     }
-  }, [requestedSlug])
+  }, [requestedSlug, requestVersion])
 
-  if (isLoading && !project) return <p className="p-8">Loading gallery...</p>
+  function retry() {
+    setLoadError(false)
+    setIsLoading(true)
+    setRequestVersion((version) => version + 1)
+  }
+
+  if (isLoading) return <HorizontalGallery images={[]} isLoading />
   if (!project) {
+    if (loadError) return <HorizontalGallery images={[]} errorMessage="This gallery is temporarily unavailable. Please try again." onRetry={retry} />
     return <Navigate to="/gallery" replace />
   }
 
-  return <HorizontalGallery images={project.images} />
+  return <HorizontalGallery images={project.images} isLiveUnavailable={loadError} />
 }
