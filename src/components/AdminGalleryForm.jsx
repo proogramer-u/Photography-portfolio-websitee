@@ -4,7 +4,7 @@ import { bucket, saveGallery } from '../lib/galleryApi'
 import { supabase } from '../lib/supabase'
 import AdminCoverUpload from './admin/AdminCoverUpload'
 import AdminProgress, { AdminSpinner } from './admin/AdminProgress'
-import { uploadGalleryCover } from '../lib/galleryCoverApi'
+import { uploadGalleryCover, verifyCoverPositionSupport } from '../lib/galleryCoverApi'
 import { validateUploadFile } from '../lib/uploadValidation'
 
 export default function AdminGalleryForm({ onSaved, onSavingChange, onCancel }) {
@@ -60,6 +60,7 @@ export default function AdminGalleryForm({ onSaved, onSavingChange, onCancel }) 
     let metadataStarted = false
 
     try {
+      if (cover.file && cover.position && (cover.position.x !== 50 || cover.position.y !== 50)) await verifyCoverPositionSupport()
       let chosenCoverPath = null
       if (cover.file) {
         chosenCoverPath = await uploadGalleryCover(cover.file, setProgress)
@@ -96,6 +97,7 @@ export default function AdminGalleryForm({ onSaved, onSavingChange, onCancel }) 
           slug: slug || generatedSlug || `gallery-${crypto.randomUUID()}`,
           status,
           coverPath: chosenCoverPath || processed[0]?.coverPath || null,
+          coverPosition: cover.file ? cover.position : undefined,
         },
         photos: processed,
       })
@@ -105,7 +107,7 @@ export default function AdminGalleryForm({ onSaved, onSavingChange, onCancel }) 
       setFiles([])
       setCover({ file: null, previewUrl: null, removed: false })
       await onSaved()
-    } catch {
+    } catch (error) {
       let cleanupFailed = false
       if (uploadedPaths.length && !metadataStarted) {
         try {
@@ -113,7 +115,7 @@ export default function AdminGalleryForm({ onSaved, onSavingChange, onCancel }) 
           cleanupFailed = Boolean(cleanupError)
         } catch { cleanupFailed = true }
       }
-      setError(metadataStarted ? 'Gallery save could not be confirmed. Refresh your galleries before retrying. Uploaded files were preserved safely.' : cleanupFailed ? 'Could not save gallery. Some uploaded files could not be cleaned up; check Storage before retrying.' : 'Could not prepare or upload these images. Check the files, storage access, and connection, then try again.')
+      setError(error.requiresCoverMigration ? error.message : metadataStarted ? 'Gallery save could not be confirmed. Refresh your galleries before retrying. Uploaded files were preserved safely.' : cleanupFailed ? 'Could not save gallery. Some uploaded files could not be cleaned up; check Storage before retrying.' : 'Could not prepare or upload these images. Check the files, storage access, and connection, then try again.')
     } finally {
       setIsSaving(false)
       submitting.current = false

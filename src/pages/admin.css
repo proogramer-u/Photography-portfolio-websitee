@@ -159,3 +159,11 @@
 @media (hover: none), (max-width: 899px) { .admin-thumbnail-actions { opacity: 1; transform: none; } .admin-thumbnail-actions button { min-height: 44px; } }
 @media (max-width: 599px) { .admin-form-actions { flex-wrap: wrap; } .admin-form-actions button { flex: 1; } .admin-cover-preview { height: 160px; } .admin-cover-zone, .admin-cover-browse { min-height: 160px; } }
 @media (prefers-reduced-motion: reduce) { .admin-dashboard *, .admin-dialog-frame * { transition: none !important; animation: none !important; } }
+
+.admin-cover-framing { width: 100%; padding: 16px; }
+.admin-cover-position { display: flex; flex-direction: column; gap: 12px; }
+.admin-cover-position-frame { width: min(100%, 360px); aspect-ratio: 1; margin-inline: auto; overflow: hidden; background: #eee; touch-action: none; cursor: grab; }
+.admin-cover-position-frame:active { cursor: grabbing; }
+.admin-cover-position-frame img { width: 100%; height: 100%; object-fit: cover; user-select: none; }
+.admin-cover-position input[type=range] { width: 100%; padding: 0; accent-color: #171717; }
+.admin-cover-position > button { align-self: flex-start; }

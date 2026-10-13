@@ -6,6 +6,8 @@ create table if not exists public.galleries (
   slug text unique not null,
   status text not null default 'draft' check (status in ('draft', 'published')),
   cover_path text,
+  cover_position_x numeric(5,2) not null default 50 constraint galleries_cover_position_x_range check (cover_position_x between 0 and 100),
+  cover_position_y numeric(5,2) not null default 50 constraint galleries_cover_position_y_range check (cover_position_y between 0 and 100),
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

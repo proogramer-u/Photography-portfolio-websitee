@@ -1,0 +1,12 @@
+.horizontal-photo-scroller { overscroll-behavior-x: contain; }
+.horizontal-photo-scroller:focus { outline: none; }
+.horizontal-photo-stage { position: relative; max-width: 100%; }
+.photo-tap-zone { position: absolute; top: 0; bottom: 0; width: 50%; background: transparent; color: white; cursor: pointer; touch-action: pan-x pan-y; display: flex; align-items: center; padding: 12px; }
+.photo-tap-zone.is-previous { left: 0; justify-content: flex-start; }
+.photo-tap-zone.is-next { right: 0; justify-content: flex-end; }
+.photo-tap-zone span { opacity: 0; font-size: 36px; line-height: 1; text-shadow: 0 1px 4px #000; transition: opacity .18s; }
+.photo-tap-zone:focus-visible { outline: 2px solid white; outline-offset: -4px; }
+.photo-tap-zone:focus-visible span, .photo-tap-zone:active:not(:disabled) span { opacity: 1; }
+@media (hover: hover) { .photo-tap-zone:hover:not(:disabled) span { opacity: 1; } }
+.photo-tap-zone:disabled { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .photo-tap-zone span { transition: none; } }
