@@ -1,0 +1,5 @@
+.public-menu-root { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; border: 0; margin: 0; padding: 0; background: transparent; color: inherit; overflow: hidden; }
+.public-menu-root::backdrop { background: transparent; }
+.public-menu-backdrop { position: absolute; inset: 0; background: #17171733; }
+.public-menu-panel { position: relative; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; }
+.public-menu-root button:focus-visible, .public-menu-root a:focus-visible { outline: 2px solid #171717; outline-offset: 5px; }

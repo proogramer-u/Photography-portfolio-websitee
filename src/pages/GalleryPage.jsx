@@ -1,4 +1,7 @@
 import Header from "../components/Header"
+import PublicFooter from "../components/PublicFooter"
+import "../components/public-gallery.css"
+import { coverPositionStyle } from "../lib/coverPosition"
 import { Link } from "react-router-dom"
 import { useEffect, useState } from "react"
 import PageTransition from "../components/PageTransition"
@@ -41,15 +44,16 @@ export default function GalleryPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-white">
+      <div className="portfolio-gallery-page min-h-dvh bg-white flex flex-col">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <main className="max-w-7xl w-full mx-auto px-4 pt-12 sm:px-6 lg:px-8 flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10" aria-busy={isLoading}>
             {isLoading ? <GallerySkeleton /> : galleries.map((item) => (
               <Link to={`/project/${item.slug || `project-${item.id}`}`} key={item.id} className="flex flex-col items-center group cursor-pointer" style={{ textDecoration: 'none' }}>
                 <div className="w-full aspect-square overflow-hidden bg-gray-100">
                   {item.cover && <SkeletonImage
                     src={item.cover}
+                    style={coverPositionStyle(item)}
                     alt={item.title}
                     loading="lazy"
                     decoding="async"
@@ -66,14 +70,8 @@ export default function GalleryPage() {
 
           {loadError && <div className="mt-8 text-center text-sm text-gray-500" role="alert"><p>Live galleries are temporarily unavailable.{galleries.length ? ' Showing the local collection.' : ' Please try again.'}</p><button type="button" onClick={retry} className="mt-3 min-h-11 underline underline-offset-4">Try again</button></div>}
 
-          <div className="flex flex-col items-center gap-8 mt-32 mb-12 text-gray-500 font-bold text-2xl w-full">
-            <div className="flex gap-12 justify-center flex-wrap">
-              <a href="https://api.whatsapp.com/send/?phone=6281246951339&text&type=phone_number&app_absent=0" target="_blank" rel="noreferrer" className="hover:text-gray-800 transition-colors">Whatsapp</a>
-              <a href="https://www.instagram.com/cokordabagoess/" target="_blank" rel="noreferrer" className="hover:text-gray-800 transition-colors">Instagram</a>
-            </div>
-            <p className="text-xl mt-4 text-gray-400">Copyright © All rights reserved.</p>
-          </div>
         </main>
+        <PublicFooter className="mt-32" />
       </div>
     </PageTransition>
   )

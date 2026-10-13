@@ -8,6 +8,7 @@ import AdminDialog from '../components/admin/AdminDialog'
 import AdminSidebar from '../components/admin/AdminSidebar'
 import AdminPhotoPreview from '../components/admin/AdminPhotoPreview'
 import AdminCoverEditor from '../components/admin/AdminCoverEditor'
+import AdminPhotoUpload from '../components/admin/AdminPhotoUpload'
 import { listAllGalleries } from '../lib/galleryApi'
 import { renameGallery, setGalleryStatus, setGalleryCover, deleteGalleryRecord } from '../lib/adminGalleryApi'
 import { supabase } from '../lib/supabase'
@@ -120,13 +121,13 @@ export default function AdminPage({ session }) {
     <PageTransition>
       <AdminWorkspace galleries={galleries} selectedId={selectedId} loading={loading} error={error} notice={notice} busy={busy} onSelect={selectGallery} onCreate={onCreate} onSignOut={signOut} onMenu={() => openDialog({ type: 'navigation' })} onRename={onRename} onEditCover={onEditCover} onStatus={handleStatus} onDelete={handleDelete} onPhoto={(photo) => openDialog({ type: 'photo', photoId: photo.id })} onUpload={() => openDialog({ type: 'upload' })} onRetry={refresh} />
       <AnimatePresence mode="wait">
-      {dialog && (dialog.type !== 'photo' || selectedPhoto) && <AdminDialog key={`${dialog.type}-${dialog.gallery?.id || dialog.photoId || ''}`} title={{ create: 'Create Gallery', rename: 'Rename Gallery', navigation: 'My Galleries', upload: 'Upload Photos', photo: 'Photograph', cover: 'Edit Gallery Cover' }[dialog.type]} onClose={closeDialog} dismissible={!busy} wide={dialog.type === 'photo'}>
+      {dialog && (dialog.type !== 'photo' || selectedPhoto) && (dialog.type !== 'upload' || selected) && <AdminDialog key={`${dialog.type}-${dialog.gallery?.id || dialog.photoId || (dialog.type === 'upload' ? selectedId : '')}`} title={{ create: 'Create Gallery', rename: 'Rename Gallery', navigation: 'My Galleries', upload: 'Upload Photos', photo: 'Photograph', cover: 'Edit Gallery Cover' }[dialog.type]} onClose={closeDialog} dismissible={!busy} wide={dialog.type === 'photo'}>
         {dialogError && <p className="admin-feedback admin-feedback-error" role="alert">{dialogError}</p>}
         {dialog.type === 'create' && <AdminGalleryForm onSavingChange={setBusy} onCancel={closeDialog} onSaved={async () => { setDialog(null); setNotice('Gallery created.'); await refresh() }} />}
         {dialog.type === 'cover' && <AdminCoverEditor gallery={dialog.gallery} onSavingChange={setBusy} onCancel={closeDialog} onSaved={async () => { setDialog(null); setNotice('Gallery cover updated.'); await refresh() }} />}
         {dialog.type === 'rename' && <form className="admin-simple-form" onSubmit={(event) => { event.preventDefault(); runAction(() => renameGallery(dialog.gallery.id, renameValue), 'Gallery renamed. Its URL is unchanged.', true) }}><label>Gallery name<input autoFocus required value={renameValue} onChange={(event) => setRenameValue(event.target.value)} /></label><p>The existing gallery URL will stay the same.</p><button className="admin-button-primary" disabled={busy || !renameValue.trim()}>{busy ? 'Saving…' : 'Save Changes'}</button></form>}
         {dialog.type === 'navigation' && <AdminSidebar galleries={galleries} selectedId={selectedId} onSelect={selectGallery} onCreate={onCreate} onSignOut={signOut} busy={busy} />}
-        {dialog.type === 'upload' && <div className="admin-dependency-panel"><p>Uploading into an existing gallery is not connected yet.</p><p>The existing upload flow still works when creating a new gallery. This view needs an upload operation that appends photo records, preserves ordering, and safely cleans up failed uploads.</p><button className="admin-button-secondary" onClick={closeDialog}>Back to gallery</button></div>}
+        {dialog.type === 'upload' && <AdminPhotoUpload gallery={selected} onSavingChange={setBusy} onCancel={closeDialog} onSaved={async (count) => { setDialog(null); setNotice(`${count} photograph${count === 1 ? '' : 's'} added.`); await refresh() }} />}
         {dialog.type === 'photo' && selectedPhoto && <AdminPhotoPreview photo={selectedPhoto} gallery={selected} busy={busy} onCover={() => runAction(() => setGalleryCover(selected, selectedPhoto.id), 'Gallery cover updated.', true)} />}
       </AdminDialog>}
       </AnimatePresence>

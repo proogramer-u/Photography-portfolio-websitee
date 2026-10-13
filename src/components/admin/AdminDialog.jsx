@@ -11,7 +11,7 @@ export default function AdminDialog({ title, onClose, children, wide = false, di
     const dialog = dialogRef.current
     const previousFocus = document.activeElement
     dialog.showModal()
-    dialog.querySelector('input:not([disabled]):not([type="file"])')?.focus()
+    dialog.querySelector('input:not([disabled]):not([type="file"]):not([type="range"])')?.focus()
     return () => {
       dialog.close()
       if (previousFocus?.isConnected) previousFocus.focus()

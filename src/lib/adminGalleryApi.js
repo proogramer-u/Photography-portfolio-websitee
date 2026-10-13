@@ -23,7 +23,7 @@ export function setGalleryStatus(id, status) {
 export function setGalleryCover(gallery, photoId) {
   const photo = gallery.images.find((image) => image.id === photoId)
   if (!photo?.storagePath) return Promise.reject(new Error('Choose a photograph belonging to this gallery.'))
-  return writeGallery(() => supabase.from('galleries').update({ cover_path: photo.storagePath, updated_at: new Date().toISOString() }).eq('id', gallery.id))
+  return writeGallery(() => supabase.from('galleries').update({ cover_path: photo.storagePath, ...(gallery.coverPositionSupported ? { cover_position_x: 50, cover_position_y: 50 } : {}), updated_at: new Date().toISOString() }).eq('id', gallery.id))
 }
 
 // Preserve the existing database-only deletion. Storage cleanup is a separate dependency.

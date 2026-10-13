@@ -1,5 +1,6 @@
 import { motion as Motion, useReducedMotion } from 'framer-motion'
 import AdminIcon from './AdminIcon'
+import { coverPositionStyle } from '../../lib/coverPosition'
 
 export default function AdminGalleryGrid({ galleries, busy, onOpen, onRename, onEditCover, onStatus, onDelete }) {
   const reduced = useReducedMotion()
@@ -7,7 +8,7 @@ export default function AdminGalleryGrid({ galleries, busy, onOpen, onRename, on
     <Motion.article key={gallery.id} className="admin-gallery-card" initial={{ opacity: 0, y: reduced ? 0 : 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : .22, delay: reduced ? 0 : Math.min(index, 6) * .025 }}>
       <div className="admin-thumbnail-wrap">
         <button className="admin-thumbnail" onClick={() => onOpen(gallery.id)} aria-label={`Open ${gallery.title}`}>
-          {gallery.cover ? <img src={gallery.cover} alt="" loading="lazy" decoding="async" /> : <span className="admin-thumbnail-placeholder"><AdminIcon name="image" size={30} /><span>No cover yet</span></span>}
+          {gallery.cover ? <img src={gallery.cover} style={coverPositionStyle(gallery)} alt="" loading="lazy" decoding="async" /> : <span className="admin-thumbnail-placeholder"><AdminIcon name="image" size={30} /><span>No cover yet</span></span>}
         </button>
         <div className="admin-thumbnail-actions"><button onClick={() => onOpen(gallery.id)} aria-label={`Edit ${gallery.title}`}>Edit</button><button onClick={() => onDelete(gallery)} disabled={busy} aria-label={`Delete ${gallery.title}`}>Delete</button></div>
       </div>

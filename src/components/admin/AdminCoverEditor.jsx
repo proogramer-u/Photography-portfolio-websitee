@@ -4,12 +4,12 @@ import AdminProgress, { AdminSpinner } from './AdminProgress'
 import { saveExistingGalleryCover } from '../../lib/galleryCoverApi'
 
 export default function AdminCoverEditor({ gallery, onSaved, onCancel, onSavingChange }) {
-  const [cover, setCover] = useState({ file: null, previewUrl: null, removed: false })
+  const [cover, setCover] = useState({ file: null, previewUrl: null, removed: false, position: gallery.coverPosition || { x: 50, y: 50 } })
   const [saving, setSaving] = useState(false)
   const [progress, setProgress] = useState('')
   const [error, setError] = useState('')
   const submitting = useRef(false)
-  const changed = Boolean(cover.file || (cover.removed && gallery.coverPath))
+  const changed = Boolean(cover.file || (cover.removed && gallery.coverPath) || (gallery.coverPath && (cover.position.x !== (gallery.coverPosition?.x ?? 50) || cover.position.y !== (gallery.coverPosition?.y ?? 50))))
 
   async function save(event) {
     event.preventDefault()

@@ -42,12 +42,14 @@ In the admin dashboard, you can:
 
 - Create a gallery as a draft, with just a name to start.
 - Upload multiple photos when creating a gallery, add captions, and arrange their order before saving.
+- Add multiple photos to an existing gallery, with optional captions.
 - Rename, publish, unpublish, or delete a gallery.
 - Upload a separate cover, replace or remove it, or use one of the gallery's photos as the cover.
+- Adjust cover framing by dragging or using position sliders (requires the cover-position migration).
 
 Uploads accept JPEG and PNG files up to 20 MiB each. They're converted to WebP in the browser, keeping their proportions. Photos are resized to a maximum 2400px longest edge; covers use 900px.
 
-Adding photos to an **existing** gallery, editing individual photo details, deleting individual photos, and reordering saved photos still need to be connected. The dashboard marks those actions as unavailable for now.
+Editing individual photo details, deleting individual photos, and reordering saved photos still need to be connected. The dashboard marks those actions as unavailable for now.
 
 ## A few things still to finish
 
@@ -60,6 +62,8 @@ Old covers and uploaded files are kept when a cover is replaced or a gallery is 
 The [codebase audit](docs/CODEBASE_AUDIT.md) has the full findings and proposed fixes. Those fixes haven't been applied yet.
 
 ## Supabase
+
+Cover framing needs the additive migration in `supabase/migrations/20261013_gallery_cover_position.sql`. Review it against your live schema before applying it. Existing galleries default to centered framing, and public reads fall back to the old schema until the columns are added. This migration does not change image files, buckets, or authorization policies.
 
 The schema reference is in `supabase/schema.sql`. It describes the `galleries` and `photos` tables, their policies, and the `portfolio-images` bucket.
 
