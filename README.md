@@ -42,12 +42,13 @@ In the admin dashboard, you can:
 
 - Create a gallery as a draft, with just a name to start.
 - Upload multiple photos when creating a gallery, add captions, and arrange their order before saving.
+- Add multiple photos to an existing gallery, with optional captions.
 - Rename, publish, unpublish, or delete a gallery.
 - Upload a separate cover, replace or remove it, or use one of the gallery's photos as the cover.
 
 Uploads accept JPEG and PNG files up to 20 MiB each. They're converted to WebP in the browser, keeping their proportions. Photos are resized to a maximum 2400px longest edge; covers use 900px.
 
-Adding photos to an **existing** gallery, editing individual photo details, deleting individual photos, and reordering saved photos still need to be connected. The dashboard marks those actions as unavailable for now.
+Editing individual photo details, deleting individual photos, and reordering saved photos still need to be connected. The dashboard marks those actions as unavailable for now.
 
 ## A few things still to finish
 
