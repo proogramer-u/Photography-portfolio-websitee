@@ -6,7 +6,7 @@ export default function HeroPage() {
     <PageTransition>
       <div style={{ position: 'relative' }}>
         <img
-          src="/images/DazzCam/ccdr 2026-05-30 0707025C5FB56DDBE6.JPG"
+          src="/images/home/_DSC3841.webp"
           alt="Hero"
           loading="eager"
           fetchPriority="high"
