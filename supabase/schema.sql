@@ -6,6 +6,7 @@ create table if not exists public.galleries (
   slug text unique not null,
   status text not null default 'draft' check (status in ('draft', 'published')),
   cover_path text,
+  deleted_at timestamptz,
   cover_position_x numeric(5,2) not null default 50 constraint galleries_cover_position_x_range check (cover_position_x between 0 and 100),
   cover_position_y numeric(5,2) not null default 50 constraint galleries_cover_position_y_range check (cover_position_y between 0 and 100),
   sort_order integer not null default 0,
@@ -18,6 +19,7 @@ create table if not exists public.photos (
   gallery_id uuid not null references public.galleries(id) on delete cascade,
   storage_path text not null,
   caption text,
+  deleted_at timestamptz,
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
@@ -30,7 +32,7 @@ alter table public.photos enable row level security;
 
 create policy "published galleries are public"
   on public.galleries for select
-  using (status = 'published' or auth.role() = 'authenticated');
+  using (auth.role() = 'authenticated' or (status = 'published' and deleted_at is null));
 
 create policy "authenticated users manage galleries"
   on public.galleries for all
@@ -40,10 +42,10 @@ create policy "authenticated users manage galleries"
 
 create policy "published gallery photos are public"
   on public.photos for select
-  using (exists (
+  using (auth.role() = 'authenticated' or (deleted_at is null and exists (
     select 1 from public.galleries
-    where galleries.id = photos.gallery_id and galleries.status = 'published'
-  ) or auth.role() = 'authenticated');
+    where galleries.id = photos.gallery_id and galleries.status = 'published' and galleries.deleted_at is null
+  )));
 
 create policy "authenticated users manage photos"
   on public.photos for all

@@ -20,10 +20,23 @@ async function readGalleryQuery(query) {
 const galleryFields = 'id, title, slug, cover_path, status, sort_order, photos(id, storage_path, caption, sort_order)'
 async function readPositionedGallery(build) {
   return readGalleryQuery(async () => {
-    let result = await build(`${galleryFields}, cover_position_x, cover_position_y`)
-    // Keep legacy deployments readable until the additive migration is applied.
-    if (result.error?.code === '42703' && result.error.message?.includes('cover_position_')) result = await build(galleryFields)
-    return result
+    let positionSupported = true
+    let trashSupported = true
+    let galleryTrashSupported = true
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const fields = (trashSupported ? galleryFields.replace('caption, sort_order)', 'caption, sort_order, deleted_at)') : galleryFields)
+        + (positionSupported ? ', cover_position_x, cover_position_y' : '')
+        + (galleryTrashSupported ? ', deleted_at' : '')
+      let query = build(fields)
+      if (trashSupported) query = query.is('photos.deleted_at', null)
+      if (galleryTrashSupported) query = query.is('deleted_at', null)
+      const result = await query
+      if (result.error?.code !== '42703') return result
+      if (positionSupported && result.error.message?.includes('cover_position_')) positionSupported = false
+      else if (galleryTrashSupported && result.error.message?.includes('deleted_at') && !result.error.message.includes('photos')) galleryTrashSupported = false
+      else if (trashSupported && result.error.message?.includes('deleted_at')) trashSupported = false
+      else return result
+    }
   })
 }
 
@@ -34,6 +47,7 @@ function publicImageUrl(path) {
 function mapGallery(row) {
   return {
     id: row.id,
+    galleryTrashSupported: Object.hasOwn(row, 'deleted_at'),
     title: row.title,
     slug: row.slug,
     cover: row.cover_path ? publicImageUrl(row.cover_path) : null,
@@ -42,9 +56,11 @@ function mapGallery(row) {
     coverPositionSupported: Object.hasOwn(row, 'cover_position_x') && Object.hasOwn(row, 'cover_position_y'),
     status: row.status,
     images: (row.photos || [])
+      .filter(photo => !photo.deleted_at)
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((photo) => ({
         id: photo.id,
+        trashSupported: Object.hasOwn(photo, 'deleted_at'),
         url: publicImageUrl(photo.storage_path),
         storagePath: photo.storage_path,
         caption: photo.caption || '',
@@ -59,7 +75,7 @@ export async function listPublishedGalleries() {
     .eq('status', 'published')
     .order('sort_order'))
 
-  return data.map(mapGallery)
+  return data.filter(row => !row.deleted_at).map(mapGallery)
 }
 
 export async function getPublishedGallery(slug) {
@@ -70,7 +86,7 @@ export async function getPublishedGallery(slug) {
     .eq('status', 'published')
     .maybeSingle())
 
-  return data ? mapGallery(data) : null
+  return data && !data.deleted_at ? mapGallery(data) : null
 }
 
 export async function listAllGalleries() {
@@ -79,7 +95,7 @@ export async function listAllGalleries() {
     .select(fields)
     .order('sort_order'))
 
-  return data.map(mapGallery)
+  return data.filter(row => !row.deleted_at).map(mapGallery)
 }
 
 export async function saveGallery({ gallery, photos }) {

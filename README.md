@@ -43,13 +43,14 @@ In the admin dashboard, you can:
 - Create a gallery as a draft, with just a name to start.
 - Upload multiple photos when creating a gallery, add captions, and arrange their order before saving.
 - Add multiple photos to an existing gallery, with optional captions.
-- Rename, publish, unpublish, or delete a gallery.
+- Edit a saved photograph’s caption or move it to Trash. Restore it later, or permanently delete its record with a separate confirmation. Trash requires the photo-Trash migration; stored image files are retained. Replace or remove a photo’s gallery cover before moving it to Trash.
+- Rename, publish, unpublish, or move a gallery to Trash. Restore it with its original publication status, or permanently delete it after confirmation.
 - Upload a separate cover, replace or remove it, or use one of the gallery's photos as the cover.
 - Adjust cover framing by dragging or using position sliders (requires the cover-position migration).
 
 Uploads accept JPEG and PNG files up to 20 MiB each. They're converted to WebP in the browser, keeping their proportions. Photos are resized to a maximum 2400px longest edge; covers use 900px.
 
-Editing individual photo details, deleting individual photos, and reordering saved photos still need to be connected. The dashboard marks those actions as unavailable for now.
+Separate photo names, descriptions, alt text, and reordering saved photos still need to be connected. Caption editing uses the existing caption field; it does not require a database migration. Trash requires the photo migration (`supabase/migrations/20261014_photo_trash.sql`), then the gallery migration (`supabase/migrations/20261015_gallery_trash.sql`). Review and apply them separately before using Trash. Galleries and photos stay until you restore or permanently delete them. Moving a gallery to Trash preserves its collection; permanently deleting it removes all its photo records, including individually trashed photos.
 
 ## A few things still to finish
 

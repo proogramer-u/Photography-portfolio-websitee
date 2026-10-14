@@ -5,14 +5,14 @@ import AdminSidebar from './AdminSidebar'
 import AdminGalleryGrid from './AdminGalleryGrid'
 import AdminPhotoGrid from './AdminPhotoGrid'
 
-export default function AdminWorkspace({ galleries, selectedId, loading, error, notice, busy, onSelect, onCreate, onSignOut, onMenu, onRename, onEditCover, onStatus, onDelete, onPhoto, onUpload, onRetry }) {
+export default function AdminWorkspace({ galleries, selectedId, loading, error, notice, busy, onSelect, onCreate, onSignOut, onMenu, onRename, onEditCover, onStatus, onDelete, onPhoto, onPhotoDelete, onTrash, onUpload, onRetry }) {
   const reduced = useReducedMotion()
   const initialLoading = loading && !galleries.length
   const selected = galleries.find((gallery) => gallery.id === selectedId)
   const missing = selectedId && !selected && !loading && !error
   const title = selected?.title || 'My Galleries'
   const count = selected ? `${selected.images.length} Photos` : `${galleries.length} Galleries`
-  const sidebarProps = { galleries, selectedId, onSelect, onCreate, onSignOut, busy }
+  const sidebarProps = { galleries, selectedId, onSelect, onCreate, onTrash, onSignOut, busy }
 
   return (
     <div className="admin-dashboard">
@@ -27,7 +27,7 @@ export default function AdminWorkspace({ galleries, selectedId, loading, error, 
         <AnimatePresence initial={false}>{notice && <Motion.p key={notice} className="admin-feedback" role="status" initial={{ opacity: 0, y: reduced ? 0 : 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : .18 }}>{notice}</Motion.p>}</AnimatePresence>
         {error && <div className="admin-feedback admin-feedback-error" role="alert"><p>{error}</p><button onClick={onRetry} disabled={busy || loading}>Try again</button></div>}
         <section className="admin-content-panel" aria-label={selected ? 'Gallery photographs' : 'All galleries'} aria-busy={loading}>
-          {initialLoading ? <div className="admin-loading-grid" aria-label="Loading galleries">{Array.from({ length: 5 }, (_, index) => <div key={index} className="admin-loading-thumbnail" />)}</div> : missing ? <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>Gallery not found</h2><p>This gallery may have been removed.</p><button className="admin-button-secondary" onClick={() => onSelect(null)}>Back to My Galleries</button></div> : error && !galleries.length ? <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>Galleries could not be loaded</h2><p>Try again to load your collection.</p></div> : selected ? selected.images.length ? <AdminPhotoGrid gallery={selected} onEdit={onPhoto} /> : <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>A new place for your photographs</h2><p>This gallery is empty. Upload photographs to start your collection.</p><button className="admin-button-secondary" onClick={onUpload}>Upload Photos</button></div> : galleries.length ? <AdminGalleryGrid galleries={galleries} busy={busy} onEditCover={onEditCover} onOpen={onSelect} onRename={onRename} onStatus={onStatus} onDelete={onDelete} /> : <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>Your collection starts here</h2><p>Create a gallery to organize your photographs.<br />You can give it a name now and add images later.</p><button className="admin-button-primary" onClick={onCreate} disabled={busy}><AdminIcon name="plus" size={17} />Create Gallery</button></div>}
+          {initialLoading ? <div className="admin-loading-grid" aria-label="Loading galleries">{Array.from({ length: 5 }, (_, index) => <div key={index} className="admin-loading-thumbnail" />)}</div> : missing ? <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>Gallery not found</h2><p>This gallery may have been removed.</p><button className="admin-button-secondary" onClick={() => onSelect(null)}>Back to My Galleries</button></div> : error && !galleries.length ? <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>Galleries could not be loaded</h2><p>Try again to load your collection.</p></div> : selected ? selected.images.length ? <AdminPhotoGrid gallery={selected} onEdit={onPhoto} onDelete={onPhotoDelete} busy={busy} /> : <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>A new place for your photographs</h2><p>This gallery is empty. Upload photographs to start your collection.</p><button className="admin-button-secondary" onClick={onUpload}>Upload Photos</button></div> : galleries.length ? <AdminGalleryGrid galleries={galleries} busy={busy} onEditCover={onEditCover} onOpen={onSelect} onRename={onRename} onStatus={onStatus} onDelete={onDelete} /> : <div className="admin-empty"><AdminIcon name="image" size={36} /><h2>Your collection starts here</h2><p>Create a gallery to organize your photographs.<br />You can give it a name now and add images later.</p><button className="admin-button-primary" onClick={onCreate} disabled={busy}><AdminIcon name="plus" size={17} />Create Gallery</button></div>}
         </section>
         <footer className="admin-footer">Cokorda Bagus Laksmana Iswara <span>Photography portfolio</span></footer>
       </main>
