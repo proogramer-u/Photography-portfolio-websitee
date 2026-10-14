@@ -3,7 +3,7 @@ import { useId } from 'react'
 import { LayoutGroup, motion as Motion, useReducedMotion } from 'framer-motion'
 import AdminIcon from './AdminIcon'
 
-export default function AdminSidebar({ galleries, selectedId, onSelect, onCreate, onSignOut, busy }) {
+export default function AdminSidebar({ galleries, selectedId, onSelect, onCreate, onTrash, onSignOut, busy }) {
   const groupId = useId()
   const reduced = useReducedMotion()
   const indicator = <Motion.span layoutId="active-gallery" className="admin-active-indicator" transition={{ type: 'tween', duration: reduced ? 0 : .2 }} />
@@ -17,6 +17,7 @@ export default function AdminSidebar({ galleries, selectedId, onSelect, onCreate
           {galleries.map((gallery) => <button key={gallery.id} onClick={() => onSelect(gallery.id)} className={`admin-gallery-link ${selectedId === gallery.id ? 'is-active' : ''}`} aria-current={selectedId === gallery.id ? 'page' : undefined}>{selectedId === gallery.id && indicator}<span className="admin-gallery-dot" /><span>{gallery.title}</span></button>)}
         </div>
         </LayoutGroup>
+        <button className="admin-nav-item" onClick={onTrash} disabled={busy}><AdminIcon name="trash" /><span>Trash</span></button>
         <button className="admin-nav-item admin-create-nav" onClick={onCreate} disabled={busy}><AdminIcon name="plus" /><span>Create Gallery</span></button>
       </nav>
       <div className="admin-sidebar-bottom"><Link to="/gallery" className="admin-nav-item"><AdminIcon name="external" /><span>View website</span></Link><button className="admin-nav-item" onClick={onSignOut} disabled={busy}><AdminIcon name="logout" /><span>Sign Out</span></button></div>
